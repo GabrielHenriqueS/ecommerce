@@ -74,6 +74,7 @@ class User extends Model{
 
 			$user = new User();
 
+
 			$user->setData($data);
 
 			$_SESSION[User::SESSION] = $user->getValues();
@@ -90,8 +91,7 @@ class User extends Model{
 
 	public static function verifyLogin($inadmin = true){
 		if (User::checkLogin($inadmin)) {
-			header("Location: /admin/login");
-			exit;
+			header("Location: /admin/");
 			}
 	}
 

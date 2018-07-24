@@ -29,6 +29,7 @@ class Model{
 			$this->{"set".$key}($value);
 
 		}
+
 	}
 
 	public function getValues(){

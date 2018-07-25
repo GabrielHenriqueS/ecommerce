@@ -173,16 +173,23 @@ class User extends Model{
 		));
 	}
 
-	public static function getForgot($email){
+	public static function getForgot($email, $inadmin = true){
 
 		$sql = new Sql();
 
+		if ($inadmin === true){
 		$results = $sql->select("SELECT * 
-			FROM tb_persons a 
-			INNER JOIN tb_users b USING(idperson) 
-			where a.desemail = :email;", array(
-				":email"=>$email
-			));
+				FROM tb_persons a 
+				INNER JOIN tb_users b USING(idperson) 
+				where a.desemail = :email;", array(
+					":email"=>$email
+				));
+		}else(
+		$results =	$sql->select("SELECT * FROM tb_persons a INNER JOIN tb_users b USING(idperson) where b.deslogin = :email;",		array(
+					":email"=>$email
+				))
+		);
+
 
 		if (count($results) === 0){
 			throw new \Exception("Não foi possível recuperar a senha.");
@@ -208,7 +215,13 @@ class User extends Model{
 
 				$result = base64_encode($iv.$code);
 
-				$link = "http://www.hcodecommerce.com.br/admin/forgot/reset?code=$result";
+				if ($inadmin === true){
+					$link = "http://www.hcodecommerce.com.br/admin/forgot/reset?code=$result";
+				} else{
+
+					$link = "http://www.hcodecommerce.com.br/forgot/reset?code=$result";
+
+				}	
 
 				$mailer = new Mailer($data["desemail"], $data["desperson"], "Redefinir Senha da Hcode Store", "forgot", array(
 					"name"=>$data["desperson"],
@@ -216,7 +229,6 @@ class User extends Model{
 				));
 
 				$mailer->send();
-
 				return $data;
 			}
 
@@ -230,7 +242,7 @@ class User extends Model{
 		 $code = mb_substr($result, openssl_cipher_iv_length('aes-256-cbc'), null, '8bit');
 		 $iv = mb_substr($result, 0, openssl_cipher_iv_length('aes-256-cbc'), '8bit');
 		 $idrecovery = openssl_decrypt($code, 'aes-256-cbc', User::SECRET, 0, $iv);
-		
+
 		 $sql = new Sql();
 
 		$results = $sql->select("

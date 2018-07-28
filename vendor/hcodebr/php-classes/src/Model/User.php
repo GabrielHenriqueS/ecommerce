@@ -12,6 +12,7 @@ class User extends Model{
 	const SECRET = "HcodePhp7_Secret";
 	const ERROR = "UserError";
 	const ERROR_REGISTER = "UserErrorRegister";
+	const SUCCESS = "UserSuccess";
 
 	public static function getFromSession(){
 		
@@ -133,6 +134,7 @@ class User extends Model{
 			":inadmin"=>$this->getinadmin()
 		));
 
+
 		$this->setData($results[0]);
 	}
 
@@ -146,19 +148,33 @@ class User extends Model{
 		$this->setData($results[0]);
 	}
 
-	public function update(){
+	public function update($inadmin = true){
 
 		$sql = new Sql();
 
-		$results = $sql->select("CALL sp_usersupdate_save(:iduser, :desperson, :deslogin, :despassword, :desemail, :nrphone, :inadmin)", array(
-			":iduser"=>$this->getiduser(),
-			":desperson"=>$this->getdesperson(),
-			":deslogin"=>$this->getdeslogin(),
-			":despassword"=>User::getPasswordHash($this->getdespassword()),
-			":desemail"=>$this->getdesemail(),
-			":nrphone"=>$this->getnrphone(),
-			":inadmin"=>$this->getinadmin()
-		));
+		if ($inadmin === true){
+
+			$results = $sql->select("CALL sp_usersupdate_save(:iduser, :desperson, :deslogin, :despassword, :desemail, :nrphone, :inadmin)", array(
+				":iduser"=>$this->getiduser(),
+				":desperson"=>$this->getdesperson(),
+				":deslogin"=>$this->getdeslogin(),
+				":despassword"=>User::getPasswordHash($this->getdespassword()),
+				":desemail"=>$this->getdesemail(),
+				":nrphone"=>$this->getnrphone(),
+				":inadmin"=>$this->getinadmin()
+			));
+
+		}else{
+			$results = $sql->select("CALL sp_usersupdate_save(:iduser, :desperson, :deslogin, :despassword, :desemail, :nrphone, :inadmin)", array(
+				":iduser"=>$this->getiduser(),
+				":desperson"=>$this->getdesperson(),
+				":deslogin"=>$this->getdeslogin(),
+				":despassword"=>$this->getdespassword(),
+				":desemail"=>$this->getdesemail(),
+				":nrphone"=>$this->getnrphone(),
+				":inadmin"=>$this->getinadmin()
+			));			
+		}
 
 		$this->setData($results[0]);
 
@@ -322,13 +338,32 @@ class User extends Model{
 		$_SESSION[User::ERROR_REGISTER] = NULL;
 	}
 
+	public function setSuccess($msg){
+		$_SESSION[User::SUCCESS] = $msg;
+	}
+
+	public static function getSuccess(){
+		$msg = (isset($_SESSION[User::SUCCESS]) && $_SESSION[User::SUCCESS]) ? $_SESSION[User::SUCCESS] : '';
+		User::clearSuccess();
+
+		return $msg;
+	}
+
+	public static function clearSuccess(){
+		$_SESSION[User::SUCCESS] = NULL;
+	}
+
 	public static function checkLoginExist($login){
 
 		$sql = new Sql();
 
-		$results = $sql->select("SELECT * FROM tb_users WHERE deslogin = :deslogin", [
+		$results = $sql->select("SELECT * FROM tb_users a
+			JOIN tb_persons b on a.idperson = b.idperson
+			WHERE a.deslogin = :deslogin or b.desemail = :deslogin", [
 			':deslogin'=>$login
 		]);
+
+
 
 		return (count($results) > 0);
 	}

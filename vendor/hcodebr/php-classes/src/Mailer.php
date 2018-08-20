@@ -8,7 +8,7 @@ use PHPMailer;
 class Mailer{
 
 	const USERNAME = "gabrielhs3l@gmail.com";
-	const PASSWORD = "pintovictor22061973";
+	const PASSWORD = "";
 	const NAME_FROM = "Hcode Store";
 
 	private $mail;

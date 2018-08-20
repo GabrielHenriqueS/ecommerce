@@ -126,12 +126,12 @@ class User extends Model{
 		$sql = new Sql();
 
 		$results = $sql->select("CALL sp_users_save(:desperson, :deslogin, :despassword, :desemail, :nrphone, :inadmin)", array(
-			":desperson"=>$this->getdesperson(),
-			":deslogin"=>$this->getdeslogin(),
+			":desperson"=>utf8_encode($this->getdesperson()),
+			":deslogin"=>utf8_encode($this->getdeslogin()),
 			":despassword"=>User::getPasswordHash($this->getdespassword()),
-			":desemail"=>$this->getdesemail(),
-			":nrphone"=>$this->getnrphone(),
-			":inadmin"=>$this->getinadmin()
+			":desemail"=>utf8_encode($this->getdesemail()),
+			":nrphone"=>utf8_encode($this->getnrphone()),
+			":inadmin"=>utf8_encode($this->getinadmin())
 		));
 
 
@@ -390,6 +390,58 @@ class User extends Model{
 			]);
 
 		return $results;
+	}
+
+	public static function getPage($page = 1, $itemsPerPage = 10){
+
+		$start = ($page-1) * $itemsPerPage;
+
+		$sql = new Sql();
+
+		$results = $sql->select("
+				SELECT SQL_CALC_FOUND_ROWS *
+				FROM tb_users a 
+				INNER JOIN tb_persons b USING(idperson) 
+				ORDER BY desperson
+				LIMIT $start, $itemsPerPage;
+			");
+
+		$resultTotal = $sql->select("SELECT FOUND_ROWS() AS nrtotal;");
+
+		return [
+			'data'=>$results,
+			'total'=>(int)$resultTotal[0]["nrtotal"],
+			'pages'=>ceil($resultTotal[0]["nrtotal"] / $itemsPerPage)
+		];
+
+	}
+
+
+	public static function getPageSearch($search, $page = 1, $itemsPerPage = 10){
+
+		$start = ($page-1) * $itemsPerPage;
+
+		$sql = new Sql();
+
+		$results = $sql->select("
+				SELECT SQL_CALC_FOUND_ROWS *
+				FROM tb_users a 
+				INNER JOIN tb_persons b USING(idperson)
+				WHERE b.desperson LIKE :search OR b.desemail = :search OR a.deslogin LIKE :search
+				ORDER BY desperson
+				LIMIT $start, $itemsPerPage;
+			", [
+				':search'=>'%'.$search.'%'
+			]);
+
+		$resultTotal = $sql->select("SELECT FOUND_ROWS() AS nrtotal;");
+
+		return [
+			'data'=>$results,
+			'total'=>(int)$resultTotal[0]["nrtotal"],
+			'pages'=>ceil($resultTotal[0]["nrtotal"] / $itemsPerPage)
+		];
+
 	}
 
 
